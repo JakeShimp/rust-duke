@@ -1,30 +1,36 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+#[derive(Debug)]
+struct Size {
+    bytes: u64,
+    kilobytes: f64,
+    megabytes: f64,
+    gigabytes: f64,
+}
 
-fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    let file = File::open(args[1].clone());
-    let file = match file {
-        Ok(file) => file,
-        Err(error) => {
-            match error.kind() {
-                std::io::ErrorKind::NotFound => {
-                    panic!("File not found: {}", error)
-                }
-                _ => {
-                    panic!("Error opening file: {}", error)
-                }
-            }
-        }
-    };
-    
-    let reader = BufReader::new(file);
-    for line in reader.lines() {
-        match line {
-            Ok(line) => println!("{}", line),
-            Err(error) => {
-                panic!("Error reading line: {}", error)
-            }
+impl Size {
+    fn new(size: u64, unit: &str) -> Self {
+        let bytes = match unit {
+            "b" => size,
+            "kb" => size * 1000,
+            "mb" => size * 1_000_000,
+            "gb" => size * 1_000_000_000,
+            _ => panic!("Unknown unit"),
+        };
+        Size {
+            bytes,
+            kilobytes: bytes as f64 / 1000.0,
+            megabytes: bytes as f64 / 1_000_000.0,
+            gigabytes: bytes as f64 / 1_000_000_000.0,
         }
     }
+}
+
+fn main() {
+    let input = std::env::args().nth(1).expect("Missing argument");
+    let mut parts = input.split_whitespace();
+    
+    let size: u64 = parts.next().unwrap().parse().unwrap();
+    let unit = parts.next().unwrap();
+
+    let result= Size::new(size, unit);
+    println!("{:?}", result);
 }
